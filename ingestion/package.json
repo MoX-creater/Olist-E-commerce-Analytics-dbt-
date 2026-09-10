@@ -1,0 +1,14 @@
+{
+  "name": "olist-ingestion",
+  "version": "1.0.0",
+  "description": "Node.js ingestion scripts for Olist E-commerce Analytics",
+  "main": "load_raw.js",
+  "scripts": {
+    "start": "node load_raw.js"
+  },
+  "dependencies": {
+    "csv-parse": "^5.5.0",
+    "dotenv": "^16.3.1",
+    "pg": "^8.11.3"
+  }
+}

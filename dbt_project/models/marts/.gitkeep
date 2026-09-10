@@ -1,0 +1,3 @@
+-- Mart models go here.
+-- Final, business-facing tables consumed by BI tools (Metabase).
+-- Example: fct_orders.sql, dim_customers.sql

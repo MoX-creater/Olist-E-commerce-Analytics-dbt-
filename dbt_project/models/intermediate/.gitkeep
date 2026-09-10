@@ -1,0 +1,3 @@
+-- Intermediate models go here.
+-- Business logic transformations that combine staging models.
+-- Example: int_orders_with_payments.sql

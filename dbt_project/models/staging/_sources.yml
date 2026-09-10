@@ -1,0 +1,147 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Raw Olist e-commerce data loaded from CSV files
+    database: olist
+    schema: raw
+    tables:
+      - name: olist_customers_dataset
+        description: Customer information including location data
+        columns:
+          - name: customer_id
+            description: Unique identifier for the customer (per order)
+          - name: customer_unique_id
+            description: Unique identifier for the customer (across all orders)
+          - name: customer_zip_code_prefix
+            description: First 5 digits of customer zip code
+          - name: customer_city
+            description: Customer city name
+          - name: customer_state
+            description: Customer state abbreviation
+
+      - name: olist_orders_dataset
+        description: Core order information including status and timestamps
+        columns:
+          - name: order_id
+            description: Unique order identifier
+          - name: customer_id
+            description: Foreign key to customer
+          - name: order_status
+            description: Order status (delivered, shipped, etc.)
+          - name: order_purchase_timestamp
+            description: Timestamp when order was placed
+          - name: order_approved_at
+            description: Timestamp when payment was approved
+          - name: order_delivered_carrier_date
+            description: Timestamp when order was handed to carrier
+          - name: order_delivered_customer_date
+            description: Timestamp when order was delivered to customer
+          - name: order_estimated_delivery_date
+            description: Estimated delivery date shown to customer
+
+      - name: olist_order_items_dataset
+        description: Items purchased within each order
+        columns:
+          - name: order_id
+            description: Foreign key to order
+          - name: order_item_id
+            description: Sequential number identifying item within order
+          - name: product_id
+            description: Foreign key to product
+          - name: seller_id
+            description: Foreign key to seller
+          - name: shipping_limit_date
+            description: Deadline for seller to ship item
+          - name: price
+            description: Item price
+          - name: freight_value
+            description: Freight/shipping cost
+
+      - name: olist_order_payments_dataset
+        description: Payment information for orders (orders can have multiple payment methods)
+        columns:
+          - name: order_id
+            description: Foreign key to order
+          - name: payment_sequential
+            description: Sequential number for payment method used
+          - name: payment_type
+            description: Payment method (credit_card, boleto, voucher, debit_card)
+          - name: payment_installments
+            description: Number of installments
+          - name: payment_value
+            description: Payment amount
+
+      - name: olist_order_reviews_dataset
+        description: Customer reviews and ratings for orders
+        columns:
+          - name: review_id
+            description: Unique review identifier
+          - name: order_id
+            description: Foreign key to order
+          - name: review_score
+            description: Rating from 1 to 5
+          - name: review_comment_title
+            description: Review title written by customer
+          - name: review_comment_message
+            description: Review message written by customer
+          - name: review_creation_date
+            description: Date review was created
+          - name: review_answer_timestamp
+            description: Timestamp when review was answered
+
+      - name: olist_products_dataset
+        description: Product catalog with category and dimensions
+        columns:
+          - name: product_id
+            description: Unique product identifier
+          - name: product_category_name
+            description: Product category name in Portuguese
+          - name: product_name_lenght
+            description: Number of characters in product name
+          - name: product_description_lenght
+            description: Number of characters in product description
+          - name: product_photos_qty
+            description: Number of product photos
+          - name: product_weight_g
+            description: Product weight in grams
+          - name: product_length_cm
+            description: Product length in centimeters
+          - name: product_height_cm
+            description: Product height in centimeters
+          - name: product_width_cm
+            description: Product width in centimeters
+
+      - name: olist_sellers_dataset
+        description: Seller information including location
+        columns:
+          - name: seller_id
+            description: Unique seller identifier
+          - name: seller_zip_code_prefix
+            description: First 5 digits of seller zip code
+          - name: seller_city
+            description: Seller city name
+          - name: seller_state
+            description: Seller state abbreviation
+
+      - name: olist_geolocation_dataset
+        description: Brazilian zip codes with lat/long coordinates
+        columns:
+          - name: geolocation_zip_code_prefix
+            description: First 5 digits of zip code
+          - name: geolocation_lat
+            description: Latitude
+          - name: geolocation_lng
+            description: Longitude
+          - name: geolocation_city
+            description: City name
+          - name: geolocation_state
+            description: State abbreviation
+
+      - name: product_category_name_translation
+        description: Translation of product category names from Portuguese to English
+        columns:
+          - name: product_category_name
+            description: Category name in Portuguese
+          - name: product_category_name_english
+            description: Category name in English

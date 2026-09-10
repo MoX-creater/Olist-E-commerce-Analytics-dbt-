@@ -1,0 +1,174 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: Staged orders with cleaned and typed columns
+    columns:
+      - name: order_id
+        description: Unique order identifier
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to customer
+        tests:
+          - not_null
+      - name: order_status
+        description: Order status
+        tests:
+          - not_null
+      - name: order_purchase_timestamp
+        description: When order was placed
+        tests:
+          - not_null
+
+  - name: stg_customers
+    description: Staged customer information
+    columns:
+      - name: customer_id
+        description: Unique identifier for the customer (per order)
+        tests:
+          - unique
+          - not_null
+      - name: customer_unique_id
+        description: Unique identifier for the customer (across all orders)
+        tests:
+          - not_null
+      - name: customer_zip_code_prefix
+        description: First 5 digits of customer zip code
+      - name: customer_city
+        description: Customer city name
+      - name: customer_state
+        description: Customer state abbreviation
+
+  - name: stg_order_items
+    description: Staged order items with product and seller information
+    columns:
+      - name: order_id
+        description: Foreign key to order
+        tests:
+          - not_null
+      - name: order_item_id
+        description: Sequential number identifying item within order
+        tests:
+          - not_null
+      - name: product_id
+        description: Foreign key to product
+        tests:
+          - not_null
+      - name: seller_id
+        description: Foreign key to seller
+        tests:
+          - not_null
+      - name: price
+        description: Item price
+        tests:
+          - not_null
+      - name: freight_value
+        description: Freight/shipping cost
+        tests:
+          - not_null
+
+  - name: stg_order_payments
+    description: Staged order payment information
+    columns:
+      - name: order_id
+        description: Foreign key to order
+        tests:
+          - not_null
+      - name: payment_sequential
+        description: Sequential number for payment method used
+        tests:
+          - not_null
+      - name: payment_type
+        description: Payment method
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['credit_card', 'boleto', 'voucher', 'debit_card', 'not_defined']
+      - name: payment_value
+        description: Payment amount
+        tests:
+          - not_null
+
+  - name: stg_order_reviews
+    description: Staged customer reviews
+    columns:
+      - name: review_id
+        description: Unique review identifier
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: Foreign key to order
+        tests:
+          - not_null
+      - name: review_score
+        description: Rating from 1 to 5
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]
+      - name: review_creation_date
+        description: Date review was created
+        tests:
+          - not_null
+
+  - name: stg_products
+    description: Staged product catalog
+    columns:
+      - name: product_id
+        description: Unique product identifier
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name
+        description: Product category name in Portuguese
+
+  - name: stg_sellers
+    description: Staged seller information
+    columns:
+      - name: seller_id
+        description: Unique seller identifier
+        tests:
+          - unique
+          - not_null
+      - name: seller_zip_code_prefix
+        description: First 5 digits of seller zip code
+      - name: seller_city
+        description: Seller city name
+      - name: seller_state
+        description: Seller state abbreviation
+
+  - name: stg_geolocation
+    description: Staged Brazilian zip code geolocation data
+    columns:
+      - name: geolocation_zip_code_prefix
+        description: First 5 digits of zip code
+        tests:
+          - not_null
+      - name: geolocation_lat
+        description: Latitude
+        tests:
+          - not_null
+      - name: geolocation_lng
+        description: Longitude
+        tests:
+          - not_null
+      - name: geolocation_city
+        description: City name
+      - name: geolocation_state
+        description: State abbreviation
+
+  - name: stg_product_category_translation
+    description: Staged product category name translations
+    columns:
+      - name: product_category_name
+        description: Category name in Portuguese
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name_english
+        description: Category name in English
+        tests:
+          - not_null
