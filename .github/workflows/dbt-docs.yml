@@ -1,0 +1,145 @@
+name: Generate and Deploy dbt Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dbt_project/**'
+  workflow_dispatch:  # Allow manual triggering
+
+env:
+  DBT_PROFILES_DIR: ${{ github.workspace }}/dbt_project
+
+jobs:
+  generate-and-deploy-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dbt-postgres
+        run: |
+          pip install --upgrade pip
+          pip install dbt-postgres==1.7.4
+
+      - name: Verify dbt installation
+        run: dbt --version
+
+      - name: Create profiles.yml with secrets
+        working-directory: dbt_project
+        run: |
+          cat > profiles.yml << EOF
+          olist_analytics:
+            target: prod
+            outputs:
+              prod:
+                type: postgres
+                host: ${{ secrets.PGHOST }}
+                port: ${{ secrets.PGPORT }}
+                user: ${{ secrets.PGUSER }}
+                password: ${{ secrets.PGPASSWORD }}
+                dbname: ${{ secrets.PGDATABASE }}
+                schema: public
+                threads: 4
+          EOF
+
+      - name: Install dbt dependencies
+        working-directory: dbt_project
+        run: dbt deps
+
+      - name: Test database connection
+        working-directory: dbt_project
+        run: dbt debug --profiles-dir .
+
+      - name: Generate dbt documentation
+        working-directory: dbt_project
+        run: |
+          dbt docs generate --profiles-dir .
+          echo "✅ dbt docs generated successfully"
+
+      - name: List generated files
+        working-directory: dbt_project/target
+        run: |
+          echo "Generated documentation files:"
+          ls -lah
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Create vercel.json config
+        working-directory: dbt_project/target
+        run: |
+          cat > vercel.json << EOF
+          {
+            "version": 2,
+            "public": true,
+            "cleanUrls": true,
+            "trailingSlash": false,
+            "rewrites": [
+              {
+                "source": "/",
+                "destination": "/index.html"
+              }
+            ],
+            "headers": [
+              {
+                "source": "/(.*)",
+                "headers": [
+                  {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=3600, must-revalidate"
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+
+      - name: Deploy to Vercel
+        working-directory: dbt_project/target
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          vercel deploy --prod --token=$VERCEL_TOKEN --yes > deployment-url.txt
+          DEPLOYMENT_URL=$(cat deployment-url.txt | tail -n 1)
+          echo "🚀 Deployed to: $DEPLOYMENT_URL"
+          echo "DEPLOYMENT_URL=$DEPLOYMENT_URL" >> $GITHUB_ENV
+
+      - name: Create deployment summary
+        run: |
+          echo "## 📊 dbt Documentation Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **Live Documentation:** ${{ env.DEPLOYMENT_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📈 Deployment Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** Push to main branch" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Visit the documentation site" >> $GITHUB_STEP_SUMMARY
+          echo "2. Explore the model lineage graph" >> $GITHUB_STEP_SUMMARY
+          echo "3. Review model descriptions and column details" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on commit (optional)
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `## 📊 dbt Docs Deployed\n\n🔗 View documentation: ${{ env.DEPLOYMENT_URL }}\n\n✅ Generated from commit ${context.sha.substring(0, 7)}`
+            })
