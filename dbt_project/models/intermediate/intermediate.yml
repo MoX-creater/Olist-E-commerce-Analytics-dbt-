@@ -1,0 +1,88 @@
+version: 2
+
+models:
+  - name: int_orders_with_payments
+    description: Orders joined with aggregated payment information
+    columns:
+      - name: order_id
+        description: Unique order identifier
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: Foreign key to customer
+        tests:
+          - not_null
+      - name: order_status
+        description: Order status
+      - name: order_purchase_timestamp
+        description: When order was placed
+      - name: order_approved_at
+        description: When payment was approved
+      - name: order_delivered_carrier_date
+        description: When order was handed to carrier
+      - name: order_delivered_customer_date
+        description: When order was delivered to customer
+      - name: order_estimated_delivery_date
+        description: Estimated delivery date
+      - name: total_payment_value
+        description: Sum of all payments for this order
+        tests:
+          - not_null
+      - name: primary_payment_type
+        description: Primary payment method used
+      - name: max_installments
+        description: Maximum installments across all payments
+      - name: payment_count
+        description: Number of payment transactions for this order
+
+  - name: int_delivery_times
+    description: Calculated delivery time metrics for orders
+    columns:
+      - name: order_id
+        description: Unique order identifier
+        tests:
+          - not_null
+          - unique
+      - name: order_status
+        description: Order status
+      - name: delivery_days
+        description: Number of days from purchase to delivery
+      - name: estimated_vs_actual_delta
+        description: Difference in days between actual and estimated delivery (negative = early, positive = late)
+      - name: is_late
+        description: Boolean flag indicating if order was delivered late
+        tests:
+          - not_null
+
+  - name: int_order_items_enriched
+    description: Order items joined with product and seller information
+    columns:
+      - name: order_id
+        description: Foreign key to order
+        tests:
+          - not_null
+      - name: order_item_id
+        description: Sequential item number within order
+        tests:
+          - not_null
+      - name: product_id
+        description: Foreign key to product
+        tests:
+          - not_null
+      - name: seller_id
+        description: Foreign key to seller
+        tests:
+          - not_null
+      - name: shipping_limit_date
+        description: Deadline for seller to ship
+      - name: price
+        description: Item price
+      - name: freight_value
+        description: Shipping cost
+      - name: product_category_name
+        description: Product category in Portuguese
+      - name: seller_city
+        description: Seller city
+      - name: seller_state
+        description: Seller state

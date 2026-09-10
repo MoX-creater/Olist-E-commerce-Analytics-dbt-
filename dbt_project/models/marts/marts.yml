@@ -1,0 +1,192 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: Customer dimension table with one row per customer
+    columns:
+      - name: customer_id
+        description: Unique customer identifier (per order)
+        tests:
+          - not_null
+          - unique
+      - name: customer_unique_id
+        description: Unique customer identifier (across all orders)
+        tests:
+          - not_null
+      - name: customer_zip_code_prefix
+        description: First 5 digits of customer zip code
+      - name: customer_city
+        description: Customer city
+      - name: customer_state
+        description: Customer state
+
+  - name: dim_products
+    description: Product dimension table with one row per product
+    columns:
+      - name: product_id
+        description: Unique product identifier
+        tests:
+          - not_null
+          - unique
+      - name: product_category_name
+        description: Product category in Portuguese
+      - name: product_category_name_english
+        description: Product category in English
+      - name: product_weight_g
+        description: Product weight in grams
+      - name: product_volume_cm3
+        description: Calculated product volume in cubic centimeters
+
+  - name: dim_sellers
+    description: Seller dimension table with one row per seller
+    columns:
+      - name: seller_id
+        description: Unique seller identifier
+        tests:
+          - not_null
+          - unique
+      - name: seller_zip_code_prefix
+        description: First 5 digits of seller zip code
+      - name: seller_city
+        description: Seller city
+      - name: seller_state
+        description: Seller state
+
+  - name: fct_orders
+    description: Fact table with one row per order containing payment and delivery metrics
+    columns:
+      - name: order_id
+        description: Unique order identifier
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: Foreign key to dim_customers
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_id
+      - name: order_status
+        description: Order status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['delivered', 'shipped', 'canceled', 'unavailable', 'invoiced', 'processing', 'created', 'approved']
+      - name: order_purchase_timestamp
+        description: When order was placed
+        tests:
+          - not_null
+      - name: total_payment_value
+        description: Total payment amount
+        tests:
+          - not_null
+      - name: primary_payment_type
+        description: Primary payment method
+      - name: delivery_days
+        description: Days from purchase to delivery
+      - name: is_late
+        description: Whether delivery was late
+        tests:
+          - not_null
+      - name: order_year
+        description: Year of order
+      - name: order_month
+        description: Month of order
+
+  - name: fct_order_items
+    description: Fact table with one row per order line item
+    columns:
+      - name: order_id
+        description: Foreign key to fct_orders
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_orders')
+              field: order_id
+      - name: order_item_id
+        description: Sequential item number
+        tests:
+          - not_null
+      - name: product_id
+        description: Foreign key to dim_products
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: product_id
+      - name: seller_id
+        description: Foreign key to dim_sellers
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_sellers')
+              field: seller_id
+      - name: price
+        description: Item price
+        tests:
+          - not_null
+      - name: freight_value
+        description: Shipping cost
+        tests:
+          - not_null
+      - name: total_item_value
+        description: Price plus freight
+        tests:
+          - not_null
+
+  - name: mart_monthly_revenue
+    description: Monthly aggregated revenue metrics
+    columns:
+      - name: order_year
+        description: Order year
+        tests:
+          - not_null
+      - name: order_month
+        description: Order month
+        tests:
+          - not_null
+      - name: month_start_date
+        description: First day of the month
+      - name: order_count
+        description: Number of orders in the month
+      - name: total_revenue
+        description: Total revenue for the month
+      - name: avg_order_value
+        description: Average order value
+
+  - name: mart_delivery_performance
+    description: Delivery performance metrics by seller and region
+    columns:
+      - name: seller_id
+        description: Seller identifier
+        tests:
+          - not_null
+      - name: seller_state
+        description: Seller state
+      - name: total_orders
+        description: Total orders handled by seller
+      - name: late_orders
+        description: Number of late deliveries
+      - name: pct_late_deliveries
+        description: Percentage of deliveries that were late
+      - name: avg_delivery_days
+        description: Average delivery time in days
+      - name: total_revenue
+        description: Total revenue generated by seller
+
+  - name: mart_review_analysis
+    description: Review score analysis by category, delivery performance, and payment type
+    columns:
+      - name: product_category_name
+        description: Product category
+      - name: is_late
+        description: Whether delivery was late
+      - name: primary_payment_type
+        description: Payment method used
+      - name: review_count
+        description: Number of reviews
+      - name: avg_review_score
+        description: Average review score (1-5)
+      - name: pct_with_comments
+        description: Percentage of reviews with written comments
