@@ -3,11 +3,11 @@ olist_analytics:
   outputs:
     dev:
       type: postgres
-      host: "{{ env_var('PGHOST') }}"
-      port: "{{ env_var('PGPORT') | int }}"
-      user: "{{ env_var('PGUSER') }}"
-      password: "{{ env_var('PGPASSWORD') }}"
-      dbname: "{{ env_var('PGDATABASE') }}"
+      host: "{{ env_var('PGHOST', '127.0.0.1') }}"
+      port: "{{ env_var('PGPORT', '5432') | int }}"
+      user: "{{ env_var('PGUSER', 'olist') }}"
+      password: "{{ env_var('PGPASSWORD', 'olist_pass') }}"
+      dbname: "{{ env_var('PGDATABASE', 'olist') }}"
       schema: public
       threads: 4
 
