@@ -6,8 +6,10 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>📊 Olist Analytics Dashboard</h1>
-        <p className="subtitle">E-commerce insights powered by dbt</p>
+        <div className="masthead">
+          <h1>Olist Trade Ledger</h1>
+          <p className="subtitle">Brazilian Marketplace Analytics – Orders, Freight, Delivery & Revenue</p>
+        </div>
       </header>
       <Dashboard />
     </div>

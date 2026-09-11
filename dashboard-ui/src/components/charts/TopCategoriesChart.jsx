@@ -47,6 +47,32 @@ function TopCategoriesChart() {
     return label.length > 25 ? label.substring(0, 22) + '...' : label;
   };
 
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{
+          backgroundColor: 'var(--bg-primary)',
+          border: '1px solid var(--border-hairline)',
+          padding: '0.75rem 1rem',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.8125rem',
+          maxWidth: '250px'
+        }}>
+          <p style={{ marginBottom: '0.5rem', fontWeight: '500', wordWrap: 'break-word' }}>
+            {payload[0].payload.category}
+          </p>
+          <p style={{ color: 'var(--accent-cargo)' }}>
+            Revenue: {formatCurrency(payload[0].value)}
+          </p>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            {payload[0].payload.items.toLocaleString()} items sold
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <ChartWrapper
       title="Top Product Categories"
@@ -61,33 +87,27 @@ function TopCategoriesChart() {
           layout="vertical"
           margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-          <XAxis type="number" stroke="#9ca3af" tickFormatter={formatCurrency} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-hairline)" />
+          <XAxis 
+            type="number" 
+            stroke="var(--text-secondary)" 
+            tickFormatter={formatCurrency}
+            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}
+          />
           <YAxis 
             type="category" 
             dataKey="category" 
-            stroke="#9ca3af"
+            stroke="var(--text-secondary)"
             width={140}
             tickFormatter={truncateLabel}
+            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}
           />
-          <Tooltip 
-            contentStyle={{ 
-              backgroundColor: '#1f2937', 
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#e5e7eb'
-            }}
-            formatter={(value, name) => {
-              if (name === 'revenue') return [formatCurrency(value), 'Revenue'];
-              if (name === 'items') return [value.toLocaleString(), 'Items Sold'];
-              return [value, name];
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Bar 
             dataKey="revenue" 
-            fill="#667eea" 
+            fill="var(--accent-cargo)" 
             name="Revenue"
-            radius={[0, 8, 8, 0]}
+            radius={[0, 0, 0, 0]}
           />
         </BarChart>
       </ResponsiveContainer>

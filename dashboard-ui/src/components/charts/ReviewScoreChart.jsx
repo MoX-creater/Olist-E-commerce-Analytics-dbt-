@@ -45,6 +45,31 @@ function ReviewScoreChart() {
     return label.length > 20 ? label.substring(0, 17) + '...' : label;
   };
 
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{
+          backgroundColor: 'var(--bg-primary)',
+          border: '1px solid var(--border-hairline)',
+          padding: '0.75rem 1rem',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.8125rem',
+          maxWidth: '250px'
+        }}>
+          <p style={{ marginBottom: '0.5rem', fontWeight: '500', wordWrap: 'break-word' }}>
+            {label}
+          </p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: entry.color, marginBottom: '0.25rem' }}>
+              {entry.name}: {entry.value.toFixed(2)} ⭐
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <ChartWrapper
       title="Review Scores by Delivery Status"
@@ -55,41 +80,34 @@ function ReviewScoreChart() {
     >
       <ResponsiveContainer width="100%" height={350}>
         <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-hairline)" />
           <XAxis 
             dataKey="category" 
-            stroke="#9ca3af"
+            stroke="var(--text-secondary)"
             angle={-45}
             textAnchor="end"
             height={100}
             tickFormatter={truncateLabel}
+            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}
           />
-          <YAxis stroke="#9ca3af" domain={[0, 5]} />
-          <Tooltip 
-            contentStyle={{ 
-              backgroundColor: '#1f2937', 
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#e5e7eb'
-            }}
-            formatter={(value, name) => {
-              if (name === 'onTime') return [value.toFixed(2), 'On-Time Delivery'];
-              if (name === 'late') return [value.toFixed(2), 'Late Delivery'];
-              return [value, name];
-            }}
+          <YAxis 
+            stroke="var(--text-secondary)" 
+            domain={[0, 5]}
+            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}
           />
-          <Legend />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend wrapperStyle={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }} />
           <Bar 
             dataKey="onTime" 
-            fill="#10b981" 
+            fill="var(--accent-cargo)" 
             name="On-Time Delivery"
-            radius={[8, 8, 0, 0]}
+            radius={[0, 0, 0, 0]}
           />
           <Bar 
             dataKey="late" 
-            fill="#f59e0b" 
+            fill="var(--accent-gold)" 
             name="Late Delivery"
-            radius={[8, 8, 0, 0]}
+            radius={[0, 0, 0, 0]}
           />
         </BarChart>
       </ResponsiveContainer>

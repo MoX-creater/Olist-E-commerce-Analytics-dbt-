@@ -1,40 +1,46 @@
 .app {
   min-height: 100vh;
-  padding: 2rem;
+  padding: 0;
 }
 
 .app-header {
-  text-align: center;
-  margin-bottom: 3rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  padding: 2rem 3rem 1.5rem;
+  border-bottom: 1px solid var(--border-hairline);
+  background: var(--bg-primary);
+}
+
+.masthead {
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .app-header h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: #ffffff;
+  font-family: var(--font-serif);
+  font-size: 2.75rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
 }
 
 .subtitle {
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 300;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 @media (max-width: 768px) {
-  .app {
-    padding: 1rem;
+  .app-header {
+    padding: 1.5rem 1.5rem 1rem;
   }
 
   .app-header h1 {
-    font-size: 1.8rem;
+    font-size: 2rem;
   }
 
   .subtitle {
-    font-size: 0.95rem;
+    font-size: 0.875rem;
   }
 }

@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recha
 import { ENDPOINTS } from '../../config';
 import ChartWrapper from './ChartWrapper';
 
-const COLORS = ['#667eea', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
+const COLORS = ['#4C7A6B', '#6B8E7F', '#8AA193', '#A8B4A8', '#C9A227', '#D4B04A', '#3A5A4D', '#5A6A5A'];
 
 function OrderStatusChart() {
   const [data, setData] = useState([]);
@@ -41,6 +41,28 @@ function OrderStatusChart() {
     }
   };
 
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{
+          backgroundColor: 'var(--bg-primary)',
+          border: '1px solid var(--border-hairline)',
+          padding: '0.75rem 1rem',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.8125rem'
+        }}>
+          <p style={{ marginBottom: '0.5rem', fontWeight: '500' }}>
+            {payload[0].payload.status}
+          </p>
+          <p style={{ color: 'var(--text-primary)' }}>
+            {payload[0].value.toLocaleString()} orders ({payload[0].payload.percentage.toFixed(1)}%)
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   const renderLabel = (entry) => {
     return `${entry.percentage.toFixed(1)}%`;
   };
@@ -64,29 +86,18 @@ function OrderStatusChart() {
             outerRadius={100}
             fill="#8884d8"
             dataKey="count"
+            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}
           >
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip 
-            contentStyle={{ 
-              backgroundColor: '#1f2937', 
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#e5e7eb'
-            }}
-            formatter={(value, name, props) => {
-              return [
-                `${value.toLocaleString()} orders (${props.payload.percentage.toFixed(1)}%)`,
-                props.payload.status
-              ];
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Legend 
             verticalAlign="bottom" 
             height={36}
             formatter={(value, entry) => entry.payload.status}
+            wrapperStyle={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}
           />
         </PieChart>
       </ResponsiveContainer>
