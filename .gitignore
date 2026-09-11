@@ -29,3 +29,13 @@ data/
 
 # Docker volumes
 docker/pgdata/
+
+# Dashboard API
+dashboard-api/node_modules/
+dashboard-api/.env
+
+# Dashboard UI
+dashboard-ui/node_modules/
+dashboard-ui/dist/
+dashboard-ui/.env
+dashboard-ui/.env.local
