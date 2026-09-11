@@ -12,6 +12,7 @@ const pool = new Pool({
   user: process.env.PGUSER || 'olist',
   password: process.env.PGPASSWORD,
   database: process.env.PGDATABASE || 'olist',
+  ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,

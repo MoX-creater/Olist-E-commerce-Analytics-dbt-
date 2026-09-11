@@ -17,7 +17,8 @@ const pool = new Pool({
   port: process.env.PGPORT,
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE
+  database: process.env.PGDATABASE,
+  ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false
 });
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -100,9 +101,13 @@ async function loadCsv(filePath) {
             try {
                 await client.query('BEGIN');
                 
+                // Drop table with CASCADE to remove dependent views created by dbt
+                // NOTE: After ingestion completes, you MUST run `dbt run` to rebuild
+                // staging/intermediate/mart models that depend on these raw tables
+                await client.query(`DROP TABLE IF EXISTS raw.${tableName} CASCADE`);
+                
                 // Create table
                 const columnsDdl = headers.map((header, i) => `"${header}" ${types[i]}`).join(', ');
-                await client.query(`DROP TABLE IF EXISTS raw.${tableName}`);
                 await client.query(`CREATE TABLE raw.${tableName} (${columnsDdl})`);
 
                 // Insert data (batched)
@@ -142,6 +147,20 @@ async function loadCsv(filePath) {
 
 async function main() {
     try {
+        // Display target database information prominently
+        console.log('\n' + '='.repeat(70));
+        console.log('🗄️  OLIST RAW DATA INGESTION');
+        console.log('='.repeat(70));
+        console.log(`📍 Target Database: ${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || 5432}`);
+        console.log(`🔐 User: ${process.env.PGUSER || 'N/A'}`);
+        console.log(`💾 Database: ${process.env.PGDATABASE || 'N/A'}`);
+        console.log(`🔒 SSL Mode: ${process.env.PGSSLMODE || 'disabled'}`);
+        console.log('='.repeat(70));
+        console.log('⚠️  WARNING: This will DROP and recreate all raw.* tables with CASCADE');
+        console.log('⚠️  Any dependent dbt views (staging, marts) will also be dropped!');
+        console.log('⚠️  You must run `dbt run` after ingestion to rebuild models.');
+        console.log('='.repeat(70) + '\n');
+
         await pool.query('CREATE SCHEMA IF NOT EXISTS raw;');
         
         if (!fs.existsSync(DATA_DIR)) {
@@ -161,7 +180,8 @@ async function main() {
             await loadCsv(path.join(DATA_DIR, file));
         }
         
-        console.log('✓ All files loaded successfully.');
+        console.log('\n✓ All files loaded successfully.');
+        console.log('\n📢 REMINDER: Run `dbt run` to rebuild staging/intermediate/mart models.\n');
     } catch (err) {
         console.error('Migration failed:', err);
     } finally {

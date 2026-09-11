@@ -10,4 +10,5 @@ olist_analytics:
       dbname: "{{ env_var('PGDATABASE', 'olist') }}"
       schema: public
       threads: 4
+      sslmode: "{{ env_var('PGSSLMODE', 'disable') }}"
 
