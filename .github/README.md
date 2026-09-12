@@ -2,6 +2,8 @@
 
 This directory contains GitHub Actions workflows for the Olist E-commerce Analytics project.
 
+**Live Documentation:** [https://olist-e-commerce-analytics-dbt.vercel.app](https://olist-e-commerce-analytics-dbt.vercel.app/)
+
 ## Workflows
 
 ### `dbt-docs.yml` - Generate and Deploy dbt Documentation
@@ -12,7 +14,7 @@ This directory contains GitHub Actions workflows for the Olist E-commerce Analyt
 
 **What it does:**
 1. Installs dbt-postgres 1.7.4
-2. Connects to your hosted Postgres database
+2. Connects to the hosted Postgres database (Neon)
 3. Runs `dbt deps` to install packages
 4. Generates dbt documentation (`dbt docs generate`)
 5. Deploys the documentation site to Vercel
@@ -28,17 +30,23 @@ You must add the following secrets to your GitHub repository before the workflow
 
 ### Required Secrets
 
-#### PostgreSQL Connection (5 secrets)
+#### PostgreSQL Connection (6 secrets)
+
+The database is hosted on [Neon](https://neon.tech), which requires SSL for all connections.
 
 | Secret Name | Description | Example Value |
 |------------|-------------|---------------|
-| `PGHOST` | Postgres host address | `your-db.postgres.database.azure.com` |
+| `PGHOST` | Neon Postgres host address | `ep-xxxx-xxxx-pooler.region.aws.neon.tech` |
 | `PGPORT` | Postgres port | `5432` |
-| `PGUSER` | Postgres username | `olist` |
+| `PGUSER` | Postgres username | `neondb_owner` |
 | `PGPASSWORD` | Postgres password | `your_secure_password` |
-| `PGDATABASE` | Database name | `olist` |
+| `PGDATABASE` | Database name | `neondb` |
+| `PGSSLMODE` | SSL mode (required by Neon) | `require` |
 
-⚠️ **Important:** These should point to your **hosted/production** Postgres instance, not `localhost`.
+⚠️ **Important:** 
+- These should point to your **hosted/production** Postgres instance (Neon), not `localhost`.
+- Neon requires `sslmode=require` — omitting `PGSSLMODE` will cause connection failures.
+- dbt models built by this pipeline land in the `public_staging` and `public_marts` schemas (dbt's default naming behavior on top of the `public` target schema).
 
 #### Vercel Deployment (3 secrets)
 
@@ -97,10 +105,16 @@ The `.vercel/project.json` file will contain:
 
 ### Test Locally First
 
-Before pushing to GitHub, test the dbt docs generation locally:
+Before pushing to GitHub, test the dbt docs generation locally (with Neon env vars exported):
 
 ```bash
 cd dbt_project
+
+export PGHOST=ep-xxxx-xxxx-pooler.region.aws.neon.tech
+export PGUSER=neondb_owner
+export PGPASSWORD=your_password
+export PGDATABASE=neondb
+export PGSSLMODE=require
 
 # Test connection to your hosted database
 dbt debug
@@ -151,13 +165,13 @@ When the workflow completes successfully, you'll see:
 ```
 📊 dbt Documentation Deployed Successfully!
 
-🔗 Live Documentation: https://olist-dbt-docs.vercel.app
+🔗 Live Documentation: https://olist-e-commerce-analytics-dbt.vercel.app
 
 📈 Deployment Details
 - Trigger: Push to main branch
 - Commit: abc1234
 - Branch: main
-- Timestamp: 2026-09-10 12:00:00 UTC
+- Timestamp: 2026-09-12 UTC
 ```
 
 ## Troubleshooting
@@ -169,9 +183,9 @@ When the workflow completes successfully, you'll see:
 Error: could not connect to server
 ```
 **Solution:** 
-- Verify `PGHOST` is a public IP/hostname, not `localhost`
-- Check firewall rules allow GitHub Actions IPs
-- Verify credentials in GitHub secrets
+- Verify `PGHOST` is your Neon pooler hostname, not `localhost`
+- Confirm `PGSSLMODE=require` is set — Neon rejects non-SSL connections
+- Verify credentials in GitHub secrets are current (Neon passwords can be rotated in the Neon dashboard)
 
 #### 2. Vercel Deployment Failed
 ```
@@ -199,6 +213,13 @@ Error: You don't have access to this project
 - Verify you're a member of the Vercel team/org
 - Use a personal account token instead of team token
 
+#### 5. Cross-Database Reference Errors
+```
+Error: cross-database references are not implemented
+```
+**Solution:**
+- Check `models/staging/sources.yml` — the `database:` field for the `raw` source should NOT be hardcoded to a database name (e.g. a leftover local Postgres database name). Leave it unset so dbt defaults to the current target's database (`neondb` on Neon).
+
 ### Debug Mode
 
 To enable verbose logging, add this to the workflow:
@@ -213,7 +234,7 @@ To enable verbose logging, add this to the workflow:
 ## Security Best Practices
 
 1. **Never commit secrets** to the repository
-2. **Rotate secrets regularly** (every 90 days recommended)
+2. **Rotate secrets regularly** (every 90 days recommended, and immediately if a password was ever printed in a terminal/log)
 3. **Use read-only database credentials** if possible
 4. **Restrict Vercel token scope** to only necessary projects
 5. **Enable branch protection** on `main` to prevent unauthorized pushes
@@ -244,6 +265,7 @@ If you prefer GitHub Pages instead of Vercel, replace the deployment step with:
 ## Resources
 
 - [dbt Documentation](https://docs.getdbt.com/)
+- [Neon Documentation](https://neon.tech/docs)
 - [Vercel CLI Documentation](https://vercel.com/docs/cli)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [GitHub Secrets Documentation](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
