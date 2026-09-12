@@ -21,7 +21,7 @@ const pool = new Pool({
   ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false
 });
 
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const SAMPLE_SIZE = 100; // rows to sample for type inference
 
 function toSnakeCase(str) {

@@ -48,6 +48,7 @@ services:
       PGUSER: ${POSTGRES_USER:-olist}
       PGPASSWORD: ${POSTGRES_PASSWORD:-olist_pass}
       PGDATABASE: ${POSTGRES_DB:-olist}
+      DATA_DIR: /app/data
     volumes:
       - ../data:/app/data:ro
     depends_on:
@@ -75,6 +76,24 @@ services:
         condition: service_healthy
     profiles:
       - tools
+
+  dashboard-api:
+    build:
+      context: ../dashboard-api
+      dockerfile: Dockerfile
+    container_name: olist_dashboard_api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PGHOST: ${NEON_HOST:-ep-cool-morning-axr0aa1n-pooler.c-4.us-east-2.aws.neon.tech}
+      PGPORT: ${NEON_PORT:-5432}
+      PGUSER: ${NEON_USER:-neondb_owner}
+      PGPASSWORD: ${NEON_PASSWORD:-npg_peviKDRTAP86}
+      PGDATABASE: ${NEON_DATABASE:-neondb}
+      PGSSLMODE: ${NEON_SSLMODE:-require}
+      PORT: 3001
+      FRONTEND_ORIGIN: http://localhost:5173
 
 volumes:
   pgdata:
